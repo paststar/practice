@@ -1,2 +1,4 @@
-# practice
-[] asdf
+pytorch practice
+
+## todo
+[ ] 
