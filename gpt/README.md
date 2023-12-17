@@ -1,19 +1,23 @@
 # TODO
-- [ ] GPT tutorial 끝내기
-- [ ] Nano GPT 참고해서 학습 코드 작성
+- [ ] Q) mask에서 값을 변경하는 방식으로 왜 할까?
+- [ ] Q) pytroch gradient 정리 : 같은 layer를 여러번 사용하면 어떻게 되나?
+
+- [ ] model save
+- [ ] model logging (wandb)
+- [ ] ML test 코드
+- [ ] GPT -  einsum ver 
+- [ ] pytorch lighting(code style?)로 리팩토링
+
+- [ ] 모델 배포
+- [ ] Nano GPT 참고
 - [ ] tokenizer 변경 (ex. google-sentencepieice, openai-tiktoken)
 - [ ] data loader 구현?
-- [ ] ML test code?
-- [ ] 배포 한번 해보기
 
 # Train data
 - tiny shakespeare dataset
     ```
     wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt -P data
     ```
-# 고민
-- pretrain dataset은 어떻게 만들지?
-    sol 1) 따로 전처리후 저장한다
 
 # Reference
 - https://www.youtube.com/watch?v=kCc8FmEb1nY
