@@ -76,9 +76,9 @@ def main(config):
 
     # generate from the model
     with torch.no_grad():
-        context = torch.zeros((1, 1), dtype=torch.long, device=config.device)
+        context = torch.zeros((1, 1), dtype=torch.long, device=config.device) # use '\n' token
         print(decode(model.generate(x, max_gen_len=200)[0].tolist()))
-
+    
 
 if __name__ == "__main__":
     config = Config(
