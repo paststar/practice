@@ -113,7 +113,8 @@ class GPT2(nn.Module):
 
     def generate(self, x, max_gen_len):
         for _ in range(max_gen_len):
-            logits,_ = self(x[:,-self.max_seq_length:]) # we can use max_seq_length token or less
+            x = x if x.size(1) <=self.max_seq_length else x[:,-self.max_seq_length:]
+            logits,_ = self(x) # we can use max_seq_length token or less
             logits = logits[:,-1,:] # use last token
             probs = F.softmax(logits,dim=-1)
             x = torch.cat((x,torch.multinomial(probs, 1)), dim=1)

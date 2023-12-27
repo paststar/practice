@@ -23,7 +23,7 @@ class Config:
     drop_rate:float
     device:Literal['cpu','cuda']
 
-def main(config:Config):
+def main(config:Config) -> None:
     ### hyperparameter ###
 
     ### preprocessing ###
@@ -44,7 +44,7 @@ def main(config:Config):
     train_data = RandomTextDataset(data[:n],config.max_seq_length)
     val_data = RandomTextDataset(data[n:],config.max_seq_length)
 
-    train_loader = DataLoader(train_data,config.batch_size,num_workers=0)
+    train_loader = DataLoader(train_data,config.batch_size,num_workers=config.num_workers)
     #val_loader = iter(DataLoader(val_data,config.batch_size,num_workers=0))
 
     net = GPT2(
@@ -56,15 +56,14 @@ def main(config:Config):
         ffn_dim=config.emb_dim * 4,
         drop_rate=config.drop_rate,
     )
-    optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
 
-    model = LitGPT(net=net, )
-
+    model = LitGPT(config=config, net=net)
     trainer = L.Trainer()
-    trainer.fit(model=, train_dataloaders=train_loader)
+    trainer.fit(model=model, train_dataloaders=train_loader)
 
 
     # train_loader = iter(train_loader)
+    # optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
     # model = model.to(config.device)
     # print(sum(p.numel() for p in model.parameters()) / 1e6, "M parameters")
     
