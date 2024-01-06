@@ -61,7 +61,6 @@ def main(config:Config) -> None:
     trainer = L.Trainer()
     trainer.fit(model=model, train_dataloaders=train_loader)
 
-
     # train_loader = iter(train_loader)
     # optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
     # model = model.to(config.device)
