@@ -127,38 +127,38 @@ class MAE(BaseModel):
         x = torch.cat([self.cls_token.expand(B,1,-1),x],dim=1) # add cls token
         x = self.encoder(x)
 
-if __name__ == '__main__':
-    from typing import Literal
-    from dataclasses import dataclass
+# if __name__ == '__main__':
+#     from typing import Literal
+#     from dataclasses import dataclass
 
-    @dataclass
-    class Config:
-        # seed:int
-        device:Literal['cpu','cuda']
-        # data_path:str
-        # val_ratio:float
-        # batch_size:int
-        # num_workers:int
-        # num_epoch:int
-        # learning_rate:int
-        image_size:int
-        patch_size:int
-        mask_ratio:float
-        encoder:Literal['ViT-S','ViT-B','ViT-L']
-        dropout:float
+#     @dataclass
+#     class Config:
+#         # seed:int
+#         device:Literal['cpu','cuda']
+#         # data_path:str
+#         # val_ratio:float
+#         # batch_size:int
+#         # num_workers:int
+#         # num_epoch:int
+#         # learning_rate:int
+#         image_size:int
+#         patch_size:int
+#         mask_ratio:float
+#         encoder:Literal['ViT-S','ViT-B','ViT-L']
+#         dropout:float
 
-    config = Config(
-        device='cpu', # "cuda" if torch.cuda.is_available() else "cpu",
-        image_size=224,
-        patch_size=16,
-        mask_ratio=0.75,
-        encoder='ViT-S',
-        dropout=0.5,
-    )
+#     config = Config(
+#         device='cpu', # "cuda" if torch.cuda.is_available() else "cpu",
+#         image_size=224,
+#         patch_size=16,
+#         mask_ratio=0.75,
+#         encoder='ViT-S',
+#         dropout=0.5,
+#     )
 
-    B,C,H,W = 8,3,224,224
-    x = torch.rand(B,C,H,W).to(config.device)
-    model = MAE(config).to(config.device)
-    loss = model.pretrain_loss(x)
-    loss.backward()
+#     B,C,H,W = 8,3,224,224
+#     x = torch.rand(B,C,H,W).to(config.device)
+#     model = MAE(config).to(config.device)
+#     loss = model.pretrain_loss(x)
+#     loss.backward()
     

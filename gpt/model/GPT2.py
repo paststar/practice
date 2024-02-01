@@ -24,31 +24,19 @@ class MultiHeadAttenion(nn.Module):
     def forward(self, x, mask=None):
         batch_size, seq_len, _ = x.shape
 
-        q = self.wq(x).view(batch_size, seq_len, self.num_head, -1)
-        k = self.wk(x).view(batch_size, seq_len, self.num_head, -1)
-        v = self.wv(x).view(batch_size, seq_len, self.num_head, -1)
-        score = torch.einsum("bihj,bkhj->bhik",q,k)/self.norm
+        q = self.wq(x).view(batch_size, seq_len, self.num_head, -1).permute(0,2,1,3)
+        k = self.wk(x).view(batch_size, seq_len, self.num_head, -1).permute(0,2,3,1)
+        v = self.wv(x).view(batch_size, seq_len, self.num_head, -1).permute(0,2,1,3)
+        score = torch.matmul(q,k)/self.norm
 
         if mask is not None:
             mask = mask.unsqueeze(0).unsqueeze(0).repeat(batch_size, self.num_head, 1, 1)
+            #score.masked_fill_(mask==0, -1e9)
             score.masked_fill_(mask==0, float("-inf"))          
-
         score = self.drop_out(torch.softmax(score, dim=3)) 
-        x = torch.einsum("bhij,bjhk->bhik",score,v)
 
-
-        # _q = q.permute(0,2,1,3)
-        # _k = k.permute(0,2,3,1)
-        # _v = v.permute(0,2,1,3)
-        # _score = torch.matmul(_q,_k)/self.norm
-        # _score = self.drop_out(torch.softmax(_score, dim=3))
-        # _x = torch.matmul(_score,_v)        
-        # assert torch.allclose(score,_score)
-        # assert score.shape == _score.shape
-        # assert torch.allclose(x,_x)
-        # assert x.shape == _x.shape
-        
-        x = x.transpose(1,2).flatten(start_dim=2) # [batch_size, seq_len, emb_dim]
+        x = torch.matmul(score,v)
+        x = x.transpose(1,2).flatten(start_dim=2) #.reshape(batch_size,seq_len,-1)
         x = self.drop_out(self.linear(x))
         return x
         
@@ -133,9 +121,4 @@ class GPT2(nn.Module):
         return x
     
 if __name__ == '__main__':
-    b,s,e = 8,16,32
-    h = 4
-    x = torch.randn(b,s,e)
-    msa = MultiHeadAttenion(num_head=h,emb_dim=e,drop_rate=0)
-    msa.eval()
-    print(msa(x).shape)
+    pass

@@ -88,9 +88,9 @@ class GAT(nn.Module):
 
     def forward(self, x: torch.Tensor, adj_mat: torch.Tensor):
         """
-        * `x` is the features vectors of shape `[n_batches, n_nodes, in_features]`
+        * `x` is the features vectors of shape `[n_nodes, in_features]`
         * `adj_mat` is the adjacency matrix of the form
-         `[n_batches, n_nodes, n_nodes, n_heads]` or `[n_batches, n_nodes, n_nodes, 1]`
+         `[n_nodes, n_nodes, n_heads]` or `[n_nodes, n_nodes, 1]`
         """
         # Apply dropout to the input
         x = self.dropout(x)
