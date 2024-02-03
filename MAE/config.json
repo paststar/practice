@@ -8,7 +8,7 @@
             "image_size" : 224,
             "patch_size" : 16,
             "mask_ratio" : 0.75,
-            "encoder_type" : "ViT-S",
+            "encoder_type" : "ViT-B",
             "dropout" : 0.5
         }
     },
@@ -16,8 +16,8 @@
         "_comment": "논문에선 4096 배치사이즈 사용",
         "type": "ImageNetDataLoader",
         "args":{
-            "data_dir": "data/",
-            "batch_size": 128,
+            "data_dir": "/root/data/",
+            "batch_size": 32,
             "shuffle": true,
             "num_workers": 2
         }
