@@ -40,8 +40,12 @@ def main(config):
     # prepare for (multi-device) GPU training
     device, device_ids = prepare_device(config['n_gpu'])
     model = model.to(device)
-    if len(device_ids) > 1:
-        model = torch.nn.DataParallel(model, device_ids=device_ids)
+
+    if config['compile']:
+        model = torch.compile(model)
+    
+    # if len(device_ids) > 1:
+    #     model = torch.nn.DataParallel(model, device_ids=device_ids)
 
     # get function handles of loss and metrics
     criterion = None  # getattr(module_loss, config['loss'])
@@ -51,13 +55,16 @@ def main(config):
     trainable_params = filter(lambda p: p.requires_grad, model.parameters())
     optimizer = config.init_obj('optimizer', torch.optim, trainable_params)
     lr_scheduler = config.init_obj('lr_scheduler', cosine_annealing_warmup, optimizer) # use custom scheduler
+    accumulation_step = config['data_loader']['args']['accumulation_step']
 
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
                       device=device,
+                      accumulation_step=accumulation_step,
                       data_loader=data_loader,
                       valid_data_loader=valid_data_loader,
-                      lr_scheduler=lr_scheduler)
+                      lr_scheduler=lr_scheduler,
+                      )
     trainer.train()
 
 

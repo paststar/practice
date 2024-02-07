@@ -2,6 +2,7 @@
     "name": "tmp",
     "n_gpu": 1,
     "seed" : 42,
+    "compile" : false,
     "arch": {
         "type": "MAE",
         "args": {
@@ -13,11 +14,12 @@
         }
     },
     "data_loader": {
-        "_comment": "논문에선 4096 배치사이즈 사용",
+        "_comment": "gradiet accumulation 사용, 4096 batch size = 32 batch size x 128 step으로 계산",
         "type": "ImageNetDataLoader",
         "args":{
             "data_dir": "/root/data/",
-            "batch_size": 32,
+            "batch_size": 4096,
+            "accumulation_step": 128,
             "shuffle": true,
             "num_workers": 2
         }
@@ -46,12 +48,12 @@
         "accuracy", "top_k_acc"
     ],
     "trainer": {
-        "epochs": 100,
+        "epochs": 10,
         "save_dir": "saved/",
         "save_period": 1,
         "verbosity": 2,
         "monitor": "min val_loss",
-        "early_stop": 10,
+        "early_stop": 100,
         "tensorboard": true
     }
 }

@@ -3,26 +3,22 @@ import torch
 from torchvision.utils import make_grid
 from base import BaseTrainer
 from utils import inf_loop, MetricTracker
+from time import time
 
 
 class Trainer(BaseTrainer):
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
-                 data_loader, valid_data_loader=None, lr_scheduler=None, len_epoch=None):
+    def __init__(self, model, criterion, metric_ftns, optimizer, config, device, accumulation_step,
+                 data_loader, valid_data_loader=None, lr_scheduler=None):
         super().__init__(model, criterion, metric_ftns, optimizer, config)
         self.config = config
         self.device = device
+        self.accumulation_step = accumulation_step
         self.data_loader = data_loader
-        if len_epoch is None:
-            # epoch-based training
-            self.len_epoch = len(self.data_loader)
-        else:
-            # iteration-based training
-            self.data_loader = inf_loop(data_loader)
-            self.len_epoch = len_epoch
         self.valid_data_loader = valid_data_loader
         self.do_validation = self.valid_data_loader is not None
         self.lr_scheduler = lr_scheduler
-        self.log_step = int(np.sqrt(data_loader.batch_size))
+        #self.log_step = int(np.sqrt(data_loader.batch_size))
+        self.len_epoch = len(self.data_loader) // self.accumulation_step if len(self.data_loader) % self.accumulation_step == 0 else len(self.data_loader) // self.accumulation_step + 1
 
         self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
         self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns], writer=self.writer)
@@ -34,38 +30,52 @@ class Trainer(BaseTrainer):
         :param epoch: Integer, current training epoch.
         :return: A log that contains average loss and metric in this epoch.
         """
+        st = time()
         self.model.train()
         self.train_metrics.reset()
         for batch_idx, data in enumerate(self.data_loader):
             data = data.to(self.device)
-
-            self.optimizer.zero_grad()
-            loss = self.model.pretrain_loss(data)
+            loss = self.model.pretrain_loss(data) / self.accumulation_step
             loss.backward()
-            self.optimizer.step()
-
+            
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             self.train_metrics.update('loss', loss.item())
+
             # for met in self.metric_ftns:
             #     self.train_metrics.update(met.__name__, met(output, target))
 
-            if batch_idx % self.log_step == 0:
+            if (batch_idx+1) % self.accumulation_step == 0:
+                self.optimizer.step()
+                self.optimizer.zero_grad()
                 self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
                     epoch,
                     self._progress(batch_idx),
                     loss.item()))
                 self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
-
-            if batch_idx == self.len_epoch:
-                break
+        
+        if (batch_idx+1) % self.accumulation_step != 0:
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+            self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
+                epoch,
+                self._progress(-1),
+                loss.item()))
+            self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                
         log = self.train_metrics.result()
 
+        self.logger.debug('Train Time: {}'.format(time()-st))
+        st = time()
+                          
         if self.do_validation:
             val_log = self._valid_epoch(epoch)
             log.update(**{'val_'+k : v for k, v in val_log.items()})
 
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
+        
+        self.logger.debug('Val Time: {}'.format(time()-st))
+        
         return log
 
     def _valid_epoch(self, epoch):
@@ -96,10 +106,6 @@ class Trainer(BaseTrainer):
 
     def _progress(self, batch_idx):
         base = '[{}/{} ({:.0f}%)]'
-        if hasattr(self.data_loader, 'n_samples'):
-            current = batch_idx * self.data_loader.batch_size
-            total = self.data_loader.n_samples
-        else:
-            current = batch_idx
-            total = self.len_epoch
+        current = (batch_idx + 1) // self.accumulation_step if batch_idx != -1 else self.len_epoch
+        total = self.len_epoch
         return base.format(current, total, 100.0 * current / total)

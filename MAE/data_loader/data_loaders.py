@@ -13,9 +13,9 @@ class ImageNetDataset(Dataset):
         #self.L = glob(os.path.join(root, path,'*'))
         self.L = glob(os.path.join(root,'ILSVRC2012_img_val','*'))
 
-        if split == 'train':
-            self.L = self.L[:100]
+        self.L = self.L[:10000]
 
+        if split == 'train':
             self.transform =  transforms.Compose([
                 transforms.RandomResizedCrop(224),
                 transforms.ToTensor(),
@@ -43,17 +43,17 @@ class ImageNetDataset(Dataset):
         return len(self.L)
 
 class ImageNetDataLoader(DataLoader):
-    def __init__(self, data_dir, batch_size, shuffle=True, num_workers=1):
+    def __init__(self, data_dir, batch_size, accumulation_step, shuffle=True, num_workers=1):
         # cf. 논문에선 RandomResizedCrop 사용
 
         self.data_dir = data_dir
-        self.batch_size = batch_size
+
+        assert batch_size % accumulation_step == 0
+        self.batch_size = batch_size // accumulation_step
         self.num_workers = num_workers
 
         self.train_dataset = ImageNetDataset(root=self.data_dir, split='train')
         self.val_dataset = ImageNetDataset(root=self.data_dir, split='val')
-
-        datasets.ImageNet
 
         train_init_kwargs = {
             'dataset': self.train_dataset,
