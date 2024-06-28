@@ -1,7 +1,7 @@
 # Pytorch Practice
 
 ## Contents
-- Paper Imlplemtation
+- Paper Implementation
     - GPT-2
     - Graph Attention Network (GAT)
     - Masked Autoencoders Are Scalable Vision Learners(MAE)
